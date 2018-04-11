@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/hungerfool?useUnicode=true&useSSL=false
+    username: root
+    password: 1qaz2wsx
+    driver-class-name: com.mysql.jdbc.Driver
+    
+mybatis: 
+  mapper-locations:
+  - classpath:com/example/demo/mapper/*.xml
+  type-aliases-package: com.example.demo.entity
+  
+http: 
+  maxTotal: 100
+  defaultMaxPerRoute: 20
+  connectTimeout: 1000
+  connectionRequestTimeout: 500
+  socketTimeout: 10000
+  staleConnectionCheckEnabled: true
+  
+#pagehelper分页插件
+pagehelper:
+    helperDialect: mysql
+    reasonable: true
+    supportMethodsArguments: true
+    params: count=countSql
+    
