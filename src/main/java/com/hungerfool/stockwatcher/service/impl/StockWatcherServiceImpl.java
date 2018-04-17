@@ -1,8 +1,10 @@
 package com.hungerfool.stockwatcher.service.impl;
 
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
+import org.apache.http.client.ClientProtocolException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,23 +21,25 @@ public class StockWatcherServiceImpl implements StockWatcherService {
 
 	@Autowired
 	private HttpService httpService;
-	
+
 	@Autowired
 	private EmailService emailService;
 
 	SimpleDateFormat sdf = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
-	
+
 	public static String emailTitle = "您设置的股票价格发生变化";
 
 	@Override
-	public void queryStockPrice(StockWatcher watcher) throws Exception {
-		String stockString = httpService.doGet("http://hq.sinajs.cn/list=" + watcher.getStockCode());
+	public StockWatcher queryStockPrice(String stockCode, String email) throws ClientProtocolException, IOException {
+		String stockString = httpService.doGet("http://hq.sinajs.cn/list=" + stockCode);
 		// System.out.println(stockInfo);
 		String[] stockInfo = stockString.split("=")[1].replaceAll("\"", "").replace(";", "").split(",");
+		StockWatcher watcher = stockWatcherRepository.findByStockCodeAndEmail(stockCode, email);
 		watcher.setCurrentPrice(Double.parseDouble(stockInfo[3]));
 		watcher.setStockName(stockInfo[0]);
 		watcher.setLastQueryTime(Calendar.getInstance());
 		stockWatcherRepository.saveAndFlush(watcher);
+		return watcher;
 	}
 
 	@Override
@@ -74,9 +78,18 @@ public class StockWatcherServiceImpl implements StockWatcherService {
 			content.append("已低于低位提醒价").append(watcher.getLowThreshold());
 		}
 
-		//System.out.println(content);
-		//emailService.sendSimpleMail(watcher.getEmail(), emailTitle, content.toString());
+		 System.out.println(content);
+		// emailService.sendSimpleMail(watcher.getEmail(), emailTitle,
+		// content.toString());
 
+	}
+
+	@Override
+	public void deleteWatcher(String stockCode, String email) {
+		StockWatcher watcher = stockWatcherRepository.findByStockCodeAndEmail(stockCode, email);
+		if (watcher != null) {
+			stockWatcherRepository.deleteById(watcher.getId());
+		}
 	}
 
 }

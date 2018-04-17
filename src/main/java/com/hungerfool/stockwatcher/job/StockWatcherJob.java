@@ -8,32 +8,39 @@ import org.quartz.PersistJobDataAfterExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
-import com.hungerfool.stockwatcher.domain.StockWatcher;
 import com.hungerfool.stockwatcher.service.StockWatcherService;
 
 @PersistJobDataAfterExecution
 @DisallowConcurrentExecution
 public class StockWatcherJob implements Job {
 
-	private StockWatcher watcher;
+	private String stockCode;
 
+	public String getStockCode() {
+		return stockCode;
+	}
+
+	public void setStockCode(String stockCode) {
+		this.stockCode = stockCode;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	private String email;
 	@Autowired
 	StockWatcherService stockWatcherService;
-
-	public void setWatcher(StockWatcher watcher) {
-		this.watcher = watcher;
-	}
 
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
 		SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
 		try {
-			 System.out.println(watcher.getStockName() + " : " + watcher.getStockCode() +
-			 " : "
-			 + watcher.getLastQueryTime().getTime().toString() + " : " +
-			 watcher.getCurrentPrice());
-			stockWatcherService.queryStockPrice(watcher);
-			stockWatcherService.checkNotification(watcher);
+			stockWatcherService.checkNotification(stockWatcherService.queryStockPrice(stockCode, email));
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(context.getJobDetail().getKey());

@@ -1,11 +1,13 @@
 package com.hungerfool.stockwatcher.http;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.http.NameValuePair;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -34,9 +36,11 @@ public class HttpService {
      * 
      * @param url
      * @return
+     * @throws IOException 
+     * @throws ClientProtocolException 
      * @throws Exception
      */
-    public String doGet(String url) throws Exception {
+    public String doGet(String url) throws ClientProtocolException, IOException  {
         // 声明 http get 请求
         HttpGet httpGet = new HttpGet(url);
 

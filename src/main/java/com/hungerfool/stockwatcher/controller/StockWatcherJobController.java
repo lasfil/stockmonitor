@@ -7,6 +7,7 @@ import javax.annotation.Resource;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
+import org.quartz.JobKey;
 import org.quartz.Scheduler;
 import org.quartz.SchedulerException;
 import org.quartz.SimpleScheduleBuilder;
@@ -46,7 +47,7 @@ public class StockWatcherJobController {
 	@Qualifier("Scheduler")
 	private Scheduler scheduler;
 
-	@RequestMapping("/addStock")
+	@RequestMapping("/addwatcher")
 	public String addStock(@RequestParam(value = "stockCode") String stockCode,
 			@RequestParam(value = "email") String email,
 			@RequestParam(value = "highThreshold", required = false) String highThreshold,
@@ -55,18 +56,35 @@ public class StockWatcherJobController {
 				StringUtils.isEmpty(highThreshold) ? null : Double.parseDouble(highThreshold),
 				StringUtils.isEmpty(lowThreshold) ? null : Double.parseDouble(lowThreshold));
 
-		scheduler.start();
+		//scheduler.start();
 		JobDataMap jobData = new JobDataMap();
-		jobData.put("watcher", watcher);
-		JobDetail jobDetail = JobBuilder.newJob().ofType(StockWatcherJob.class)
-				.withIdentity(email + ":" + stockCode, email).usingJobData(jobData).build();
+		jobData.put("stockCode", stockCode);
+		jobData.put("email", email);
+		JobDetail jobDetail = null;
+		JobKey jobKey = new JobKey(email + ":" + stockCode, email);
+		if (!scheduler.checkExists(jobKey)) {
+			jobDetail = JobBuilder.newJob().ofType(StockWatcherJob.class).withIdentity(email + ":" + stockCode, email)
+					.usingJobData(jobData).build();
+			Trigger trigger = TriggerBuilder.newTrigger().withIdentity(stockCode + ":" + email).startNow()
+					.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(5).repeatForever()).build();
 
-		Trigger trigger = TriggerBuilder.newTrigger().withIdentity(stockCode + ":" + email).startNow()
-				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(5).repeatForever()).build();
-
-		scheduler.scheduleJob(jobDetail, trigger);
+			scheduler.scheduleJob(jobDetail, trigger);
+		}
+		
 
 		return watcher.getStockCode() + watcher.getEmail();
+	}
+	
+	@RequestMapping("/removewatcher")
+	public String addStock(@RequestParam(value = "stockCode") String stockCode,
+			@RequestParam(value = "email") String email) throws SchedulerException {
+		
+		JobKey jobKey = new JobKey(email + ":" + stockCode, email);
+		if (scheduler.checkExists(jobKey)) {
+			scheduler.deleteJob(jobKey);
+			stockWatcherService.deleteWatcher(stockCode, email);
+		}
+		return stockCode + email + " removed";
 	}
 
 	@RequestMapping("/time")
