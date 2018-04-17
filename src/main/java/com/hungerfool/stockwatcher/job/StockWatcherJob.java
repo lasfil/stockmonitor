@@ -1,30 +1,44 @@
 package com.hungerfool.stockwatcher.job;
 
+import org.quartz.DisallowConcurrentExecution;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.quartz.PersistJobDataAfterExecution;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
-public class StockWatcherJob implements Job{
-	private double maxPrice;
-	private double minPrice;
-	private String stockCode;
-	public void setStockCode(String stockCode) {
-		this.stockCode = stockCode;
+import com.hungerfool.stockwatcher.domain.StockWatcher;
+import com.hungerfool.stockwatcher.service.StockWatcherService;
+
+@PersistJobDataAfterExecution
+@DisallowConcurrentExecution
+public class StockWatcherJob implements Job {
+
+	private StockWatcher watcher;
+
+	@Autowired
+	StockWatcherService stockWatcherService;
+
+	public void setWatcher(StockWatcher watcher) {
+		this.watcher = watcher;
 	}
-	public void setEmail(String email) {
-		this.email = email;
-	}
-	private String email;
-	
-	
-	public void setMaxPrice(double maxPrice) {
-		this.maxPrice = maxPrice;
-	}
-	public void setMinPrice(double minPrice) {
-		this.minPrice = minPrice;
-	}
+
 	@Override
 	public void execute(JobExecutionContext context) throws JobExecutionException {
-		
+		SpringBeanAutowiringSupport.processInjectionBasedOnCurrentContext(this);
+		try {
+			 System.out.println(watcher.getStockName() + " : " + watcher.getStockCode() +
+			 " : "
+			 + watcher.getLastQueryTime().getTime().toString() + " : " +
+			 watcher.getCurrentPrice());
+			stockWatcherService.queryStockPrice(watcher);
+			stockWatcherService.checkNotification(watcher);
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println(context.getJobDetail().getKey());
+		}
+
 	}
+
 }

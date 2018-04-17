@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class HttpClient {
+public class HttpClientConfig {
 
 	@Value("${http.maxTotal}")
 	private Integer maxTotal;

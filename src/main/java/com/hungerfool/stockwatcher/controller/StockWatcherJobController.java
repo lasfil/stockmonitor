@@ -1,22 +1,88 @@
 package com.hungerfool.stockwatcher.controller;
 
+import java.util.Date;
+
 import javax.annotation.Resource;
 
+import org.quartz.JobBuilder;
+import org.quartz.JobDataMap;
+import org.quartz.JobDetail;
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.SimpleScheduleBuilder;
+import org.quartz.Trigger;
+import org.quartz.TriggerBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hungerfool.stockwatcher.http.HttpAPIService;
+import com.hungerfool.stockwatcher.domain.StockWatcher;
+import com.hungerfool.stockwatcher.http.HttpService;
+import com.hungerfool.stockwatcher.job.StockWatcherJob;
+import com.hungerfool.stockwatcher.job.TimeJob;
+import com.hungerfool.stockwatcher.service.StockWatcherService;
 
 @RestController
-@RequestMapping(value="/job")
+@RequestMapping(value = "/job")
 public class StockWatcherJobController {
 	@Resource
-    private HttpAPIService httpAPIService;
+	private HttpService httpAPIService;
 
-    @RequestMapping("/httpclient")
-    public String test() throws Exception {
-        String str = httpAPIService.doGet("http://hq.sinajs.cn/list=sh601006,sh600000");
-        System.out.println(str);
-        return "hello";
-    }
+	@Autowired
+	StockWatcherService stockWatcherService;
+
+	@RequestMapping("/httpclient")
+	public String test() throws Exception {
+		String str = httpAPIService.doGet("http://hq.sinajs.cn/list=sh601006,sh600000");
+		System.out.println(str);
+		return "hello";
+	}
+
+	// 加入Qulifier注解，通过名称注入bean
+	@Autowired
+	@Qualifier("Scheduler")
+	private Scheduler scheduler;
+
+	@RequestMapping("/addStock")
+	public String addStock(@RequestParam(value = "stockCode") String stockCode,
+			@RequestParam(value = "email") String email,
+			@RequestParam(value = "highThreshold", required = false) String highThreshold,
+			@RequestParam(value = "lowThreshold", required = false) String lowThreshold) throws SchedulerException {
+		StockWatcher watcher = stockWatcherService.getStockWatcher(stockCode, email,
+				StringUtils.isEmpty(highThreshold) ? null : Double.parseDouble(highThreshold),
+				StringUtils.isEmpty(lowThreshold) ? null : Double.parseDouble(lowThreshold));
+
+		scheduler.start();
+		JobDataMap jobData = new JobDataMap();
+		jobData.put("watcher", watcher);
+		JobDetail jobDetail = JobBuilder.newJob().ofType(StockWatcherJob.class)
+				.withIdentity(email + ":" + stockCode, email).usingJobData(jobData).build();
+
+		Trigger trigger = TriggerBuilder.newTrigger().withIdentity(stockCode + ":" + email).startNow()
+				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(5).repeatForever()).build();
+
+		scheduler.scheduleJob(jobDetail, trigger);
+
+		return watcher.getStockCode() + watcher.getEmail();
+	}
+
+	@RequestMapping("/time")
+	public String time() throws SchedulerException {
+		scheduler.start();
+		JobDataMap jobData = new JobDataMap();
+		Date now = new Date();
+		jobData.put("time", now.toString());
+		JobDetail jobDetail = JobBuilder.newJob().ofType(TimeJob.class).withIdentity(now.toString())
+				.usingJobData(jobData).build();
+
+		Trigger trigger = TriggerBuilder.newTrigger().withIdentity(now.toString()).startNow()
+				.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(5).repeatForever()).build();
+
+		scheduler.scheduleJob(jobDetail, trigger);
+		return "time";
+	}
+
 }

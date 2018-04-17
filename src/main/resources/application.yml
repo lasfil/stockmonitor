@@ -4,12 +4,26 @@ spring:
     username: root
     password: 1qaz2wsx
     driver-class-name: com.mysql.jdbc.Driver
-    
-mybatis: 
-  mapper-locations:
-  - classpath:com/example/demo/mapper/*.xml
-  type-aliases-package: com.example.demo.entity
-  
+  mail: 
+     host: smtp.mxhichina.com
+     username: notification@hungerfool.com
+     password: 1qaz@wsx
+     properties:
+       mail: 
+         smtp: 
+           auth: true
+#           starttls: 
+#             enable: true
+#             required: true
+  jpa:
+    database: MYSQL
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+      naming-strategy: org.hibernate.cfg.ImprovedNamingStrategy
+    properties:
+      hibernate: 
+        dialect: org.hibernate.dialect.MySQL5Dialect
 http: 
   maxTotal: 100
   defaultMaxPerRoute: 20
@@ -18,10 +32,3 @@ http:
   socketTimeout: 10000
   staleConnectionCheckEnabled: true
   
-#pagehelper分页插件
-pagehelper:
-    helperDialect: mysql
-    reasonable: true
-    supportMethodsArguments: true
-    params: count=countSql
-    
