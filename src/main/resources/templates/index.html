@@ -1,0 +1,43 @@
+<!DOCTYPE HTML>
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta content="text/html;charset=UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet" />
+<link th:href="@{/bootstrap/css/bootstrap-theme.min.css}"
+	rel="stylesheet" />
+</head>
+<body>
+	<section class="container-fluid cover">
+		<div class="container">
+			<div class="container no-padding-on-mobile"
+				style="background: url('/images/bgr_home_banner_1280.jpg'); background-size: 100%;">
+			</div>
+		</div>
+		<div class="container">
+			<div class="container no-padding-on-mobile">
+				<div class="jumbotron">
+					<h1>
+						<span class="line-break">我最喜欢的持股时间是</span> <span
+							class="line-break">……永远！</span>
+					</h1>
+					<p>今天的投资者不是从昨天的增长中获利的—— 巴菲特</p>
+				</div>
+				<div class="text-center">
+					<form class="form-inline" action="/stockmonitor" method="GET">
+						<div class="form-group">
+							<input type="email" name="email" placeholder="请输入接收提醒邮箱"
+								class="form-control input-lg" required="" value="">
+						</div>
+						<button type="submit" class="btn btn-primary btn-lg">开始设置股价监控</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</section>
+	<script th:src="@{/jquery/jquery-3.3.1.js}"></script>
+	<script th:src="@{/bootstrap/js/bootstrap.min.js}"></script>
+
+</body>
+</html>
