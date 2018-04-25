@@ -1,7 +1,10 @@
 package com.hungerfool.stockmonitor.controller;
 
+import java.io.IOException;
+
 import javax.annotation.Resource;
 
+import org.apache.http.client.ClientProtocolException;
 import org.quartz.JobBuilder;
 import org.quartz.JobDataMap;
 import org.quartz.JobDetail;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.hungerfool.stockmonitor.domain.StockMonitor;
 import com.hungerfool.stockmonitor.http.HttpService;
 import com.hungerfool.stockmonitor.job.StockMonitorJob;
 import com.hungerfool.stockmonitor.service.StockMonitorService;
@@ -56,9 +60,17 @@ public class StockMonitorJobController {
 			@RequestParam(value = "highThreshold", required = false) String highThreshold,
 			@RequestParam(value = "lowThreshold", required = false) String lowThreshold, Model model)
 			throws SchedulerException {
-		stockMonitorService.getStockMonitor(stockCode, email,
-				StringUtils.isEmpty(highThreshold) ? null : Double.parseDouble(highThreshold),
-				StringUtils.isEmpty(lowThreshold) ? null : Double.parseDouble(lowThreshold));
+		StockMonitor monitor = null;
+		try {
+			monitor = stockMonitorService.createStockMonitor(stockCode, email,
+					StringUtils.isEmpty(highThreshold) ? null : Double.parseDouble(highThreshold),
+					StringUtils.isEmpty(lowThreshold) ? null : Double.parseDouble(lowThreshold));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		if (monitor == null) {
+			return "redirect:stockmonitor?email=" + email;
+		}
 
 		// scheduler.start();
 		JobDataMap jobData = new JobDataMap();

@@ -33,16 +33,15 @@ public class StockMonitorServiceImpl implements StockMonitorService {
 
 	@Override
 	public StockMonitor queryStockPrice(String stockCode, String email) throws ClientProtocolException, IOException {
-		StockMonitor monitor = stockMonitorRepository.findByStockCodeAndEmail(stockCode, email);
+		
 		String stockString = httpService.doGet("http://hq.sinajs.cn/list=" + stockCode);
 		// System.out.println(stockInfo);
-		stockString = stockString.split("=")[1].replaceAll("\"", "").replace(";", "");
+		stockString = stockString.split("=")[1].replaceAll("\"", "").replace(";", "").trim();
 		if (StringUtils.isEmpty(stockString)) {
-			stockMonitorRepository.deleteById(monitor.getId());
 			return null;
 		}
 		String[] stockInfo = stockString.split(",");
-		
+		StockMonitor monitor = stockMonitorRepository.findByStockCodeAndEmail(stockCode, email);
 		monitor.setCurrentPrice(Double.parseDouble(stockInfo[3]));
 		monitor.setStockName(stockInfo[0]);
 		monitor.setLastQueryTime(Calendar.getInstance());
@@ -55,12 +54,7 @@ public class StockMonitorServiceImpl implements StockMonitorService {
 		StockMonitor monitor = stockMonitorRepository.findByStockCodeAndEmail(stockCode, email);
 		if (monitor == null) {
 			monitor = stockMonitorRepository.save(new StockMonitor(stockCode, email, highThreshold, lowThreshold));
-		} else {
-			monitor.setHighThreshold(highThreshold);
-			monitor.setLowThreshold(lowThreshold);
-			stockMonitorRepository.saveAndFlush(monitor);
-		}
-
+		} 
 		return monitor;
 
 	}
@@ -103,6 +97,23 @@ public class StockMonitorServiceImpl implements StockMonitorService {
 	@Override
 	public List<StockMonitor> getStockMonitorByEmail(String email) {
 		return stockMonitorRepository.findAllByEmail(email);
+	}
+
+	@Override
+	public StockMonitor createStockMonitor(String stockCode, String email, Double highThreshold, Double lowThreshold) throws ClientProtocolException, IOException {
+		String stockString = httpService.doGet("http://hq.sinajs.cn/list=" + stockCode);
+		// System.out.println(stockInfo);
+		stockString = stockString.split("=")[1].replaceAll("\"", "").replace(";", "").trim();
+		if (StringUtils.isEmpty(stockString)) {
+			return null;
+		}
+		String[] stockInfo = stockString.split(",");
+		StockMonitor monitor = getStockMonitor(stockCode, email, highThreshold, lowThreshold);
+		monitor.setCurrentPrice(Double.parseDouble(stockInfo[3]));
+		monitor.setStockName(stockInfo[0]);
+		monitor.setLastQueryTime(Calendar.getInstance());
+		stockMonitorRepository.saveAndFlush(monitor);
+		return monitor;
 	}
 
 }
