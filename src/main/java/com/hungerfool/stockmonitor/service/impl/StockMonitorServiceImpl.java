@@ -112,6 +112,8 @@ public class StockMonitorServiceImpl implements StockMonitorService {
 		monitor.setCurrentPrice(Double.parseDouble(stockInfo[3]));
 		monitor.setStockName(stockInfo[0]);
 		monitor.setLastQueryTime(Calendar.getInstance());
+		monitor.setHighThreshold(highThreshold);
+		monitor.setLowThreshold(lowThreshold);
 		stockMonitorRepository.saveAndFlush(monitor);
 		return monitor;
 	}
