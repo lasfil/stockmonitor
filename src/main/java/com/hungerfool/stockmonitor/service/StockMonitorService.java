@@ -10,7 +10,7 @@ public interface StockMonitorService {
 
 	public void checkNotification(StockMonitor monitor);
 
-	public StockMonitor getStockMonitor(String stockCode, String email, Double highThreshold, Double lowThreshold);
+	public StockMonitor saveStockMonitor(String stockCode, String email, Double highThreshold, Double lowThreshold);
 
 	public void deleteMonitor(String stockCode, String email);
 

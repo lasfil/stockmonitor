@@ -33,14 +33,14 @@ public class StockMonitorServiceImpl implements StockMonitorService {
 
 	@Override
 	public StockMonitor queryStockPrice(String stockCode, String email) throws ClientProtocolException, IOException {
-		StockMonitor monitor = stockMonitorRepository.findByStockCodeAndEmail(stockCode, email);
 		String stockString = httpService.doGet("http://hq.sinajs.cn/list=" + stockCode);
 		// System.out.println(stockInfo);
-		stockString = stockString.split("=")[1].replaceAll("\"", "").replace(";", "");
+		stockString = stockString.split("=")[1].replaceAll("\"", "").replace(";", "").trim();
 		if (StringUtils.isEmpty(stockString)) {
-			stockMonitorRepository.deleteById(monitor.getId());
+			//stockMonitorRepository.deleteById(monitor.getId());
 			return null;
 		}
+		StockMonitor monitor = stockMonitorRepository.findByStockCodeAndEmail(stockCode, email);
 		String[] stockInfo = stockString.split(",");
 		
 		monitor.setCurrentPrice(Double.parseDouble(stockInfo[3]));
@@ -51,7 +51,7 @@ public class StockMonitorServiceImpl implements StockMonitorService {
 	}
 
 	@Override
-	public StockMonitor getStockMonitor(String stockCode, String email, Double highThreshold, Double lowThreshold) {
+	public StockMonitor saveStockMonitor(String stockCode, String email, Double highThreshold, Double lowThreshold) {
 		StockMonitor monitor = stockMonitorRepository.findByStockCodeAndEmail(stockCode, email);
 		if (monitor == null) {
 			monitor = stockMonitorRepository.save(new StockMonitor(stockCode, email, highThreshold, lowThreshold));

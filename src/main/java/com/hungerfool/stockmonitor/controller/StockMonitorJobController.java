@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.hungerfool.stockmonitor.domain.StockMonitor;
 import com.hungerfool.stockmonitor.http.HttpService;
 import com.hungerfool.stockmonitor.job.StockMonitorJob;
 import com.hungerfool.stockmonitor.service.StockMonitorService;
@@ -55,10 +56,19 @@ public class StockMonitorJobController {
 			@RequestParam(value = "email") String email,
 			@RequestParam(value = "highThreshold", required = false) String highThreshold,
 			@RequestParam(value = "lowThreshold", required = false) String lowThreshold, Model model)
-			throws SchedulerException {
-		stockMonitorService.getStockMonitor(stockCode, email,
-				StringUtils.isEmpty(highThreshold) ? null : Double.parseDouble(highThreshold),
-				StringUtils.isEmpty(lowThreshold) ? null : Double.parseDouble(lowThreshold));
+			throws SchedulerException, InterruptedException {
+		try {
+			StockMonitor monitor = stockMonitorService.queryStockPrice(stockCode, email);
+			if (monitor != null) {
+				stockMonitorService.saveStockMonitor(stockCode, email,
+						StringUtils.isEmpty(highThreshold) ? null : Double.parseDouble(highThreshold),
+						StringUtils.isEmpty(lowThreshold) ? null : Double.parseDouble(lowThreshold));
+			} else {
+				return "redirect:stockmonitor?email=" + email;
+			}
+		} catch (Exception e) {
+			return "redirect:stockmonitor?email=" + email;
+		}
 
 		// scheduler.start();
 		JobDataMap jobData = new JobDataMap();
@@ -70,13 +80,14 @@ public class StockMonitorJobController {
 			jobDetail = JobBuilder.newJob().ofType(StockMonitorJob.class).withIdentity(email + ":" + stockCode, email)
 					.usingJobData(jobData).build();
 			Trigger trigger = TriggerBuilder.newTrigger().withIdentity(stockCode + ":" + email).startNow()
-					.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(5).repeatForever())
+					.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(3).repeatForever())
 					.build();
 
 			scheduler.scheduleJob(jobDetail, trigger);
 		}
 		model.addAttribute("email", email);
 		model.addAttribute("monitors", stockMonitorService.getStockMonitorByEmail(email));
+		Thread.sleep(1000);
 		return "redirect:stockmonitor?email=" + email;
 	}
 
