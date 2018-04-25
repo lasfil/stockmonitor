@@ -82,7 +82,7 @@ public class StockMonitorJobController {
 			jobDetail = JobBuilder.newJob().ofType(StockMonitorJob.class).withIdentity(email + ":" + stockCode, email)
 					.usingJobData(jobData).build();
 			Trigger trigger = TriggerBuilder.newTrigger().withIdentity(stockCode + ":" + email).startNow()
-					.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(5).repeatForever())
+					.withSchedule(SimpleScheduleBuilder.simpleSchedule().withIntervalInSeconds(3).repeatForever())
 					.build();
 
 			scheduler.scheduleJob(jobDetail, trigger);
